@@ -69,7 +69,7 @@ public class DefaultJpaConnectionProviderFactory implements JpaConnectionProvide
     private static final Logger logger = Logger.getLogger(DefaultJpaConnectionProviderFactory.class);
 
     enum MigrationStrategy {
-        UPDATE, VALIDATE, MANUAL
+        UPDATE, VALIDATE, MANUAL, UPDATE_THEN_EXIT
     }
 
     private volatile EntityManagerFactory emf;
@@ -310,6 +310,9 @@ public class DefaultJpaConnectionProviderFactory implements JpaConnectionProvide
                     case UPDATE:
                         update(connection, schema, session, updater);
                         break;
+                    case UPDATE_THEN_EXIT:
+                        update(connection, schema, session, updater);
+                        throw new ServerStartupError("Database has been initialized", false);
                     case MANUAL:
                         export(connection, schema, databaseUpdateFile, session, updater);
                         throw new ServerStartupError("Database not initialized, please initialize database with " + databaseUpdateFile.getAbsolutePath(), false);
@@ -322,6 +325,9 @@ public class DefaultJpaConnectionProviderFactory implements JpaConnectionProvide
                 case UPDATE:
                     update(connection, schema, session, updater);
                     break;
+                case UPDATE_THEN_EXIT:
+                    update(connection, schema, session, updater);
+                    throw new ServerStartupError("Database has been initialized", false);
                 case MANUAL:
                     export(connection, schema, databaseUpdateFile, session, updater);
                     throw new ServerStartupError("Database not up-to-date, please migrate database with " + databaseUpdateFile.getAbsolutePath(), false);

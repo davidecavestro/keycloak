@@ -66,7 +66,7 @@ public class QuarkusJpaConnectionProviderFactory extends AbstractJpaConnectionPr
     private static final String SQL_GET_LATEST_VERSION = "SELECT ID, VERSION FROM %sMIGRATION_MODEL ORDER BY UPDATE_TIME DESC";
 
     enum MigrationStrategy {
-        UPDATE, VALIDATE, MANUAL
+        UPDATE, VALIDATE, MANUAL, UPDATE_THEN_EXIT
     }
 
     private Map<String, String> operationalInfo;
@@ -251,6 +251,9 @@ public class QuarkusJpaConnectionProviderFactory extends AbstractJpaConnectionPr
                     case UPDATE:
                         update(connection, schema, session, updater);
                         break;
+                    case UPDATE_THEN_EXIT:
+                        update(connection, schema, session, updater);
+                        throw new ServerStartupError("Database has been initialized", false);
                     case MANUAL:
                         export(connection, schema, databaseUpdateFile, session, updater);
                         throw new ServerStartupError("Database not initialized, please initialize database with " + databaseUpdateFile.getAbsolutePath(), false);
@@ -263,6 +266,9 @@ public class QuarkusJpaConnectionProviderFactory extends AbstractJpaConnectionPr
                 case UPDATE:
                     update(connection, schema, session, updater);
                     break;
+                case UPDATE_THEN_EXIT:
+                    update(connection, schema, session, updater);
+                    throw new ServerStartupError("Database has been initialized", false);
                 case MANUAL:
                     export(connection, schema, databaseUpdateFile, session, updater);
                     throw new ServerStartupError("Database not up-to-date, please migrate database with " + databaseUpdateFile.getAbsolutePath(), false);
